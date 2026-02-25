@@ -6,39 +6,42 @@ class CrossReferenceTool extends BaseTool {
   final GithubSearchService _searchService;
 
   CrossReferenceTool({GithubSearchService? searchService})
-    : _searchService = searchService ?? GithubSearchService(),
-      super(
-        name: 'cross_reference',
-        description:
-            'Maps a conceptual feature described in a package README to its actual implementation inside the repository .dart files.',
-      );
+    : _searchService = searchService ?? GithubSearchService();
 
   @override
-  List<ToolProperty> get properties => [
-    ToolProperty(
-      name: 'package_name',
-      description: 'The name of the Dart package (e.g., "google_generative_ai").',
-      type: 'string',
-      isRequired: true,
-    ),
-    ToolProperty(
-      name: 'feature',
-      description: 'The conceptual feature to cross-reference (e.g., "Function Calling").',
-      type: 'string',
-      isRequired: true,
-    ),
-  ];
+  String get name => 'cross_reference';
 
   @override
-  Future<CallToolResult> call(Map<String, dynamic> arguments) async {
-    final packageName = arguments['package_name'] as String;
-    final feature = arguments['feature'] as String;
+  String get description =>
+      'Maps a conceptual feature described in a package README to its actual implementation inside the repository .dart files.';
+
+  @override
+  ToolInputSchema get inputSchema => JsonSchema.object(
+    properties: {
+      'package_name': JsonSchema.string(
+        description: 'The name of the Dart package (e.g., "google_generative_ai").',
+      ),
+      'feature': JsonSchema.string(
+        description: 'The conceptual feature to cross-reference (e.g., "Function Calling").',
+      ),
+    },
+    required: ['package_name', 'feature'],
+  );
+
+  @override
+  Future<CallToolResult> execute(Map<String, dynamic> args, RequestHandlerExtra? extra) async {
+    final packageName = args['package_name']?.toString();
+    final feature = args['feature']?.toString();
+
+    if (packageName == null || feature == null) {
+      throw Exception('package_name and feature are required');
+    }
 
     final result = await _searchService.crossReferenceFeature(
       packageName: packageName,
       feature: feature,
     );
 
-    return CallToolResult(content: [TextContent(text: result)], isError: false);
+    return CallToolResult.fromContent([TextContent(text: result)]);
   }
 }
