@@ -45,3 +45,52 @@ jobs:
           files: build/${{ matrix.output_name }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-homebrew:
+    name: Update Homebrew Formula
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get release metadata
+        id: meta
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+
+      - name: Download release assets
+        run: |
+          BASE="https://github.com/${{ github.repository }}/releases/download/${{ steps.meta.outputs.tag }}"
+          curl -fL -o dart-docs-mcp-macos.tar.gz "$BASE/dart-docs-mcp-macos.tar.gz"
+          curl -fL -o dart-docs-mcp-linux.tar.gz "$BASE/dart-docs-mcp-linux.tar.gz"
+
+      - name: Compute SHA256
+        id: sha256
+        run: |
+          echo "macos=$(sha256sum dart-docs-mcp-macos.tar.gz | awk '{print $1}')" >> $GITHUB_OUTPUT
+          echo "linux=$(sha256sum dart-docs-mcp-linux.tar.gz | awk '{print $1}')" >> $GITHUB_OUTPUT
+
+      - name: Checkout homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: alfredobs97/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula
+        run: |
+          python3 .github/scripts/update_homebrew.py \
+            homebrew-tap/Formula/dart-docs-mcp.rb \
+            "${{ steps.meta.outputs.tag }}" \
+            "${{ steps.sha256.outputs.macos }}" \
+            "${{ steps.sha256.outputs.linux }}"
+
+      - name: Commit and push
+        run: |
+          cd homebrew-tap
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add Formula/dart-docs-mcp.rb
+          git commit -m "chore: bump dart-docs-mcp to ${{ steps.meta.outputs.tag }}"
+          git push
