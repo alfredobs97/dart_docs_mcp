@@ -15,14 +15,14 @@ class GetPackageDocsTool extends BaseTool {
   @override
   String get description =>
       'Fetch the README and example directory '
-      'documentation for a Dart package from pub.dev to provide context. '
+      'documentation for a Dart and/or Flutter package from pub.dev to provide context. '
       'Use this when you need documentation and examples for a pub.dev package dependency.';
 
   @override
   ToolInputSchema get inputSchema => JsonSchema.object(
     properties: {
       'package_name': JsonSchema.string(
-        description: 'The exact name of the Dart package (e.g., http, riverpod)',
+        description: 'The exact name of the Dart or Flutter package (e.g., http, riverpod)',
       ),
       'source': JsonSchema.string(
         description: 'The source to fetch from: "archive" (default - recommended) or "github".',

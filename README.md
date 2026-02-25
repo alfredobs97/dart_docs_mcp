@@ -1,6 +1,6 @@
 # Dart Docs MCP Server
 
-A local Model Context Protocol (MCP) server that provides an AI agent with the ability to fetch documentation context for Dart packages from pub.dev.
+A local Model Context Protocol (MCP) server that provides an AI agent with the ability to fetch documentation context for Dart and Flutter packages from pub.dev.
 
 ## Features
 
@@ -54,7 +54,7 @@ docker run -i dart-docs-mcp:latest
 
 ## Tools Exposed
 
-- `get_package_docs`: Given a `package_name`, it returns the compiled context consisting of the README and example files.
+- `get_package_docs`: Given a `package_name` (Dart or Flutter package), it returns the compiled context consisting of the README and example files.
 
 ## Adding to an MCP Client
 
@@ -110,7 +110,7 @@ Google Antigravity allows you to easily connect local MCP servers directly throu
 }
 ```
 
-5. Save the configuration and click the **Refresh** button. The `get_package_docs` tool will now be natively available to your Antigravity AI agents to fetch Dart package context on demand.
+5. Save the configuration and click the **Refresh** button. The `get_package_docs` tool will now be natively available to your Antigravity AI agents to fetch Dart and Flutter package context on demand.
 
 ## Testing
 

@@ -8,12 +8,12 @@ class ReviewCodeWithPackagePrompt extends BasePrompt {
 
   @override
   String get description =>
-      'A prompt to review existing code against the official documentation and examples of a Dart package.';
+      'A prompt to review existing code against the official documentation and examples of a Dart and/or Flutter package.';
 
   @override
   Map<String, PromptArgumentDefinition>? get argsSchema => {
     'package_name': PromptArgumentDefinition(
-      description: 'The exact name of the Dart package (e.g., path, http)',
+      description: 'The exact name of the Dart or Flutter package (e.g., path, http, flutter_bloc)',
       required: true,
     ),
     'code': PromptArgumentDefinition(

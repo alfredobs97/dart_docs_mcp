@@ -8,12 +8,12 @@ class ImplementWithPackagePrompt extends BasePrompt {
 
   @override
   String get description =>
-      'A prompt to help an AI agent implement a specific task using a Dart package by first reading its documentation.';
+      'A prompt to help an AI agent implement a specific task using a Dart and/or Flutter package by first reading its documentation.';
 
   @override
   Map<String, PromptArgumentDefinition>? get argsSchema => {
     'package_name': PromptArgumentDefinition(
-      description: 'The exact name of the Dart package (e.g., path, http)',
+      description: 'The exact name of the Dart or Flutter package (e.g., path, http, flutter_bloc)',
       required: true,
     ),
     'task': PromptArgumentDefinition(
