@@ -52,6 +52,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+
       - name: Get release metadata
         id: meta
         run: |
