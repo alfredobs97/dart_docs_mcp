@@ -90,8 +90,11 @@ jobs:
             "${{ steps.sha256.outputs.linux }}"
 
       - name: Commit and push
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           cd homebrew-tap
+          git remote set-url origin "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/alfredobs97/homebrew-tap.git"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git add Formula/dart-docs-mcp.rb
