@@ -36,13 +36,26 @@ class GithubPubService implements PubService {
       final String branch = await _getDefaultBranch(owner, repo);
 
       // Fetch Root README
-      final readme = await _fetchFile(
-        owner,
-        repo,
-        branch,
-        pathPrefix == null ? 'README.md' : '$pathPrefix/README.md',
-      );
+      final readmePath = pathPrefix == null ? 'README.md' : '$pathPrefix/README.md';
+      var readme = await _fetchFile(owner, repo, branch, readmePath);
+
       if (readme != null) {
+        // Check for repository redirection
+        final redirectUrl = _extractRedirectUrl(readme);
+        if (redirectUrl != null) {
+          final redirectedInfo = _parseGithubUrl(redirectUrl);
+          if (redirectedInfo != null) {
+            // Recurse into the new repository
+            final redirectedDocs = await getPackageDocsFromInfo(
+              packageName,
+              redirectedInfo.owner,
+              redirectedInfo.repo,
+              redirectedInfo.pathPrefix,
+            );
+            return redirectedDocs;
+          }
+        }
+
         buffer.writeln('\n## README.md');
         buffer.writeln(readme);
       } else {
@@ -77,6 +90,65 @@ class GithubPubService implements PubService {
     }
 
     return buffer.toString();
+  }
+
+  /// Internal helper to fetch docs when owner/repo/path are already known.
+  Future<String> getPackageDocsFromInfo(
+    String packageName,
+    String owner,
+    String repo,
+    String? pathPrefix,
+  ) async {
+    final buffer = StringBuffer();
+    buffer.writeln('# Documentation context for $packageName');
+
+    try {
+      final branch = await _getDefaultBranch(owner, repo);
+
+      // Root README
+      final readmePath = pathPrefix == null ? 'README.md' : '$pathPrefix/README.md';
+      final readme = await _fetchFile(owner, repo, branch, readmePath);
+      if (readme != null) {
+        buffer.writeln('\n## README.md');
+        buffer.writeln(readme);
+      }
+
+      // Example README
+      final exampleReadmePath = pathPrefix == null
+          ? 'example/README.md'
+          : '$pathPrefix/example/README.md';
+      final exampleReadme = await _fetchFile(owner, repo, branch, exampleReadmePath);
+      if (exampleReadme != null) {
+        buffer.writeln('\n## example/README.md');
+        buffer.writeln(exampleReadme);
+      }
+
+      // example/lib
+      final exampleLibPrefix = pathPrefix == null ? 'example/lib' : '$pathPrefix/example/lib';
+      final exampleLibFiles = await _fetchDirectoryFiles(owner, repo, branch, exampleLibPrefix);
+
+      if (exampleLibFiles.isNotEmpty) {
+        buffer.writeln('\n## example/lib Files');
+        for (final entry in exampleLibFiles.entries) {
+          buffer.writeln('\n### ${entry.key}');
+          buffer.writeln('```dart\n${entry.value}\n```');
+        }
+      }
+    } catch (e) {
+      buffer.writeln('Error fetching redirected documentation: $e');
+    }
+
+    return buffer.toString();
+  }
+
+  String? _extractRedirectUrl(String readmeContent) {
+    if (!readmeContent.contains('This package has been moved to a new repository:')) {
+      return null;
+    }
+
+    // Try to find the URL in the text
+    final urlMatch = RegExp(r'https://github\.com/[^\s\n\)]+').firstMatch(readmeContent);
+    return urlMatch?.group(0);
   }
 
   Future<Map<String, dynamic>> _fetchPubInfo(String packageName) async {
