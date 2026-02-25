@@ -1,21 +1,25 @@
-# Use latest stable channel SDK.
+# --- Build Stage ---
 FROM dart:stable AS build
 
-# Resolve app dependencies.
 WORKDIR /app
+
+# Resolve app dependencies.
 COPY pubspec.* ./
 RUN dart pub get
 
-# Copy app source code (except anything in .dockerignore) and AOT compile app.
+# Copy app source code and compile.
 COPY . .
 RUN dart compile exe bin/server.dart -o bin/server
 
-# Build minimal serving image from AOT-compiled `/server`
-# and the pre-built AOT-runtime in the `/runtime/` directory of the base image.
-FROM scratch
+# --- Development Stage ---
+# This stage keeps the source code and allows running with 'dart run'
+# for easier development/testing without re-compiling.
+FROM build AS dev
+CMD ["dart", "run", "bin/server.dart"]
+
+# --- Production Stage ---
+# Minimal serving image from AOT-compiled binary.
+FROM scratch AS runtime
 COPY --from=build /runtime/ /
 COPY --from=build /app/bin/server /app/bin/
-
-# Start server.
-EXPOSE 8080
 CMD ["/app/bin/server"]

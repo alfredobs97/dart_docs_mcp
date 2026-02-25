@@ -9,11 +9,20 @@ A local Model Context Protocol (MCP) server that provides an AI agent with the a
 - Extracts the main `README.md`.
 - Extracts the `example` directory contents, specifically `example/README.md` and the entire `example/lib` folder, to give the AI agent concrete usage examples.
 
-## Requirements
+## Installation
 
-- Dart SDK version ^3.0.0 or higher
+### Via Homebrew (macOS & Linux)
 
-## Running Locally
+You can install the `dart-docs-mcp` globally without needing the Dart SDK installed:
+
+```bash
+brew tap alfredobs97/tap
+brew install dart-docs-mcp
+```
+
+This will make the `dart-docs-mcp` command available globally.
+
+## Running Locally (Development)
 
 To run the server locally, simply execute:
 
@@ -22,6 +31,26 @@ dart run bin/dart_docs_mcp.dart
 ```
 
 This starts the MCP Server on standard input/output (stdio), which is standard for MCP clients (like Claude, Gemini CLI, or Google Antigravity).
+
+### Using Docker (No installation required)
+
+If you don't want to install Dart or FVM locally, you can use Docker.
+
+#### For Development/Testing:
+This runs the server using `dart run`, which is faster for iterating as it doesn't require a full AOT compilation.
+
+```bash
+docker build --target dev -t dart-docs-mcp:dev .
+docker run -i dart-docs-mcp:dev
+```
+
+#### For Production:
+This builds a minimal image with a native AOT-compiled binary.
+
+```bash
+docker build --target runtime -t dart-docs-mcp:latest .
+docker run -i dart-docs-mcp:latest
+```
 
 ## Tools Exposed
 
@@ -36,12 +65,8 @@ Add this to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "dart_docs_mcp": {
-      "command": "dart",
-      "args":[
-        "run",
-        "bin/dart_docs_mcp.dart"
-      ],
-      "cwd": "/absolute/path/to/dart_docs_mcp"
+      "command": "dart-docs-mcp",
+      "args": []
     }
   }
 }
@@ -54,12 +79,8 @@ You can configure the MCP server in Gemini CLI either globally (`~/.gemini/setti
 {
   "mcpServers": {
     "dart_docs_mcp": {
-      "command": "dart",
-      "args":[
-        "run",
-        "bin/dart_docs_mcp.dart"
-      ],
-      "cwd": "/absolute/path/to/dart_docs_mcp"
+      "command": "dart-docs-mcp",
+      "args": []
     }
   }
 }
@@ -67,7 +88,7 @@ You can configure the MCP server in Gemini CLI either globally (`~/.gemini/setti
 
 *Tip:* You can also add it without manually editing the file by using the Gemini CLI configuration command:
 ```bash
-gemini mcp add local stdio dart_docs_mcp --command dart --args "run bin/dart_docs_mcp.dart" --cwd "/absolute/path/to/dart_docs_mcp"
+gemini mcp add local stdio dart_docs_mcp --command dart-docs-mcp
 ```
 
 ### Example for Google Antigravity IDE
@@ -82,12 +103,8 @@ Google Antigravity allows you to easily connect local MCP servers directly throu
 {
   "mcpServers": {
     "dart_docs_mcp": {
-      "command": "dart",
-      "args":[
-        "run",
-        "bin/dart_docs_mcp.dart"
-      ],
-      "cwd": "/absolute/path/to/dart_docs_mcp"
+      "command": "dart-docs-mcp",
+      "args": []
     }
   }
 }
