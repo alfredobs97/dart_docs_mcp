@@ -1,0 +1,45 @@
+name: Build and Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            output_name: dart-docs-mcp-linux
+          - os: macos-latest
+            output_name: dart-docs-mcp-macos
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Compile
+        run: |
+          mkdir build
+          dart compile exe bin/server.dart -o build/${{ matrix.output_name }}
+
+      - name: Archive production artifacts
+        run: |
+          cd build
+          tar -czvf ${{ matrix.output_name }}.tar.gz ${{ matrix.output_name }}
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/${{ matrix.output_name }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
