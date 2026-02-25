@@ -5,5 +5,5 @@
 # FVM Version Cache
 .fvm/
 
-# Git worktrees for isolated feature development
+# Git worktrees (local dev isolation)
 .worktrees/
