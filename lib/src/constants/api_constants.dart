@@ -9,4 +9,16 @@ class ApiConstants {
 
   static String githubContentsUrl(String owner, String repo, String branch, String dirPath) =>
       'https://api.github.com/repos/$owner/$repo/contents/$dirPath?ref=$branch';
+
+  /// Dartdoc HTML page for a specific class in a package.
+  /// [namespace] is the library name used in the URL (e.g. 'characters', 'dart-async').
+  static String dartdocClassUrl(String package, String namespace, String typeName) =>
+      'https://pub.dev/documentation/$package/latest/$namespace/$typeName-class.html';
+
+  /// GitHub Code Search API endpoint.
+  static String githubCodeSearchUrl(String query) =>
+      'https://api.github.com/search/code?q=${Uri.encodeQueryComponent(query)}';
+
+  /// pub.dev archive download URL for a specific package version.
+  static String pubDevArchiveUrl(String archiveUrl) => archiveUrl;
 }
