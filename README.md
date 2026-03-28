@@ -8,6 +8,7 @@ A local Model Context Protocol (MCP) server that provides an AI agent with the a
 - Automatically discovers the package's GitHub repository.
 - Extracts the main `README.md`.
 - Extracts the `example` directory contents, specifically `example/README.md` and the entire `example/lib` folder, to give the AI agent concrete usage examples.
+- **Fetches targeted CHANGELOG.md entries**: extracts specific version ranges to assist with migrations and understanding breaking changes.
 - **Searches the internal `lib/` source code** of any package with a keyword or regex, returning file paths, line numbers, and context snippets — without cloning the repository.
 
 ## Architecture
@@ -74,6 +75,7 @@ docker run -i dart-docs-mcp:latest
 | `get_package_docs` | Fetches the README and `example/` directory of a package. Best for getting a general overview and concrete usage examples. |
 | `get_api_surface` | Fetches a concise "virtual header" of all public classes, methods, and enums from a package's `index.json`. Ideal for understanding the public API without reading full source files. |
 | `get_type_hierarchy` | Reconstructs the inheritance tree for a specific class (e.g., finding all implementations of a sealed class). |
+| `get_changelog` | Fetches the `CHANGELOG.md` and returns specific entries between two versions. Best for migration context. |
 | `cross_reference` | Maps conceptual features from a README to specific implementation files using GitHub search. |
 | `search_package_code` | **Greps the internal `lib/` source files** of a package for a keyword or regex. Returns file paths, 1-based line numbers, and ±3-line context snippets. Generated files (`.g.dart`, `.freezed.dart`, etc.) are automatically excluded. Results are capped at 15 matches. |
 
@@ -97,6 +99,10 @@ Once you have the server running or built, you can use the inspector to call too
    # Search the internal lib/ source code
    mcp_dart inspect --tool search_package_code \
      --json-args '{"package_name": "http", "search_query": "Client"}'
+
+   # Fetch a specific changelog range for migration
+   mcp_dart inspect --tool get_changelog \
+     --json-args '{"package_name": "http", "current_version": "0.13.0", "target_version": "1.1.0"}'
    ```
 
 This is particularly useful for verifying that JSON-RPC communication is working correctly without needing to restart your IDE or AI client.

@@ -149,6 +149,39 @@ class ArchivePubService implements PubService {
     return matches;
   }
 
+  @override
+  Future<String?> getChangelog(String packageName) async {
+    try {
+      final pubInfo = await _fetchPubInfo(packageName);
+      final archiveUrl = _extractArchiveUrl(pubInfo);
+
+      if (archiveUrl == null) {
+        throw Exception('Could not find a valid archive URL for package $packageName.');
+      }
+
+      final url = Uri.parse(archiveUrl);
+      final response = await client.get(url);
+      if (response.statusCode != 200) {
+        throw Exception('Failed to download archive for package $packageName: ${response.statusCode}');
+      }
+
+      // Decode the gzip-compressed tar archive.
+      final tarBytes = GZipDecoder().decodeBytes(response.bodyBytes);
+      final archive = TarDecoder().decodeBytes(tarBytes);
+
+      for (final file in archive) {
+        if (file.isFile && file.name.toUpperCase() == 'CHANGELOG.MD') {
+          final contentBytes = file.content as List<int>;
+          return utf8.decode(contentBytes, allowMalformed: true);
+        }
+      }
+      throw Exception('CHANGELOG.md not found in the package archive for $packageName.');
+    } catch (e) {
+      if (e is Exception) rethrow; // Preserve the original exception if it's already one of ours
+      throw Exception('Error fetching changelog for $packageName: $e');
+    }
+  }
+
   /// Returns `true` for common generated Dart file suffixes that should be
   /// excluded from code searches to avoid noisy, machine-written results.
   bool _isGeneratedFile(String path) {
