@@ -7,6 +7,10 @@ WORKDIR /app
 COPY pubspec.* ./
 RUN dart pub get
 
+# Install MCP Inspector CLI for local testing within the container.
+RUN dart pub global activate mcp_dart_cli
+ENV PATH="$PATH":"/root/.pub-cache/bin"
+
 # Copy app source code and compile.
 COPY . .
 RUN dart compile exe bin/server.dart -o bin/server
