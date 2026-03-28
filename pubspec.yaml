@@ -1,6 +1,6 @@
 name: dart_docs_mcp
 description: An MCP server that fetches documentation and examples for Dart and Flutter packages from pub.dev.
-version: 0.0.2
+version: 0.0.4
 repository: https://github.com/alfredobs97/dart_docs_mcp
 
 environment:
