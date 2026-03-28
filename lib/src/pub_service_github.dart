@@ -92,6 +92,41 @@ class GithubPubService implements PubService {
     return buffer.toString();
   }
 
+  @override
+  Future<String?> getChangelog(String packageName) async {
+    try {
+      final pubInfo = await _fetchPubInfo(packageName);
+      final repoUrl = _extractRepoUrl(pubInfo);
+
+      if (repoUrl == null) {
+        throw Exception('No repository URL linked to package $packageName on pub.dev.');
+      }
+
+      final githubInfo = _parseGithubUrl(repoUrl);
+      if (githubInfo == null) {
+        throw Exception('Could not parse GitHub repository from URL: $repoUrl for package $packageName.');
+      }
+
+      final String owner = githubInfo.owner;
+      final String repo = githubInfo.repo;
+      final String? pathPrefix = githubInfo.pathPrefix;
+
+      final String branch = await _getDefaultBranch(owner, repo);
+
+      final changelogPath =
+          pathPrefix == null ? 'CHANGELOG.md' : '$pathPrefix/CHANGELOG.md';
+
+      final content = await _fetchFile(owner, repo, branch, changelogPath);
+      if (content == null || content.isEmpty) {
+        throw Exception('CHANGELOG.md not found in the GitHub repository at $changelogPath for $packageName.');
+      }
+      return content;
+    } catch (e) {
+      if (e is Exception) rethrow; // Preserve original exceptions
+      throw Exception('Error fetching changelog for $packageName: $e');
+    }
+  }
+
   /// Internal helper to fetch docs when owner/repo/path are already known.
   Future<String> getPackageDocsFromInfo(
     String packageName,
