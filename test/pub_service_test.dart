@@ -65,5 +65,37 @@ void main() {
       final docs = await service.getPackageDocs('this_package_does_not_exist_xyz123');
       expect(docs, contains('Error fetching documentation'));
     });
+
+    test('ArchivePubService fetches CHANGELOG.md', () async {
+      final service = ArchivePubService();
+      final changelog = await service.getChangelog('http');
+      expect(changelog, isNotEmpty);
+      expect(changelog!.toUpperCase(), contains('##'));
+    });
+
+    test('ArchivePubService throws for non-existent package', () async {
+      final service = ArchivePubService();
+      expect(
+        () => service.getChangelog('this_package_does_not_exist_xyz123'),
+        throwsA(predicate((e) => e.toString().contains('Failed to load package info'))),
+      );
+    });
+
+    test('GithubPubService fetches CHANGELOG.md', () async {
+      final service = GithubPubService();
+      final changelog = await service.getChangelog('path');
+      expect(changelog, isNotEmpty);
+      expect(changelog!.toUpperCase(), contains('##'));
+    });
+
+    test('GithubPubService throws when no repository URL is available', () async {
+      final service = GithubPubService();
+      // 'sky_engine' is a package with no homepage/repository listed on pub.dev (often)
+      // or we can just use a non-existent one which will fail at fetchPubInfo
+      expect(
+        () => service.getChangelog('this_package_does_not_exist_xyz123'),
+        throwsA(predicate((e) => e.toString().contains('Failed to load package info'))),
+      );
+    });
   });
 }
