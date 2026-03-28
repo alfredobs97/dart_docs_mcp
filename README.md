@@ -8,6 +8,21 @@ A local Model Context Protocol (MCP) server that provides an AI agent with the a
 - Automatically discovers the package's GitHub repository.
 - Extracts the main `README.md`.
 - Extracts the `example` directory contents, specifically `example/README.md` and the entire `example/lib` folder, to give the AI agent concrete usage examples.
+- **Searches the internal `lib/` source code** of any package with a keyword or regex, returning file paths, line numbers, and context snippets — without cloning the repository.
+
+## Architecture
+
+This server is built using the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/), an open standard that enables AI models to interact with local and remote tools.
+
+### How it Works
+1. **Request**: An MCP client (like Claude or Antigravity) sends a JSON-RPC request to this server over standard input (`stdio`).
+2. **Orchestration**: The `McpServer` handles the protocol handshake and routes the request to the appropriate tool implementation in `lib/mcp/tools/`.
+3. **Execution**: The tools use internal services (`lib/src/`) to fetch data from:
+    - **pub.dev API**: For package metadata and version info.
+    - **pub.dev Assets**: For pre-rendered Dartdoc `index.json` (API surface).
+    - **Package Archives**: Downloaded and extracted in-memory to fetch READMEs and examples.
+    - **GitHub**: Fallback for direct repository inspection.
+4. **Response**: The gathered context is formatted as a `CallToolResult` and sent back to the client to be injected into the LLM's context.
 
 ## Installation
 
@@ -54,23 +69,39 @@ docker run -i dart-docs-mcp:latest
 
 ## Tools Exposed
 
-- `get_package_docs`: Given a `package_name` (Dart or Flutter package), it returns the compiled context consisting of the README and example files.
+| Tool | Description |
+|------|-------------|
+| `get_package_docs` | Fetches the README and `example/` directory of a package. Best for getting a general overview and concrete usage examples. |
+| `get_api_surface` | Fetches a concise "virtual header" of all public classes, methods, and enums from a package's `index.json`. Ideal for understanding the public API without reading full source files. |
+| `get_type_hierarchy` | Reconstructs the inheritance tree for a specific class (e.g., finding all implementations of a sealed class). |
+| `cross_reference` | Maps conceptual features from a README to specific implementation files using GitHub search. |
+| `search_package_code` | **Greps the internal `lib/` source files** of a package for a keyword or regex. Returns file paths, 1-based line numbers, and ±3-line context snippets. Generated files (`.g.dart`, `.freezed.dart`, etc.) are automatically excluded. Results are capped at 15 matches. |
+
+## Local Testing & Debugging
+
+The easiest way to test your MCP server locally is using the [`mcp_dart_cli`](https://github.com/leehack/mcp_dart?tab=readme-ov-file#quick-start-with-cli) tool.
+
+### Testing with the CLI
+Once you have the server running or built, you can use the inspector to call tools manually:
+
+1. **Install the CLI**:
+   ```bash
+   dart pub global activate mcp_dart_cli
+   ```
+
+2. **Run a tool query**:
+   ```bash
+   # Fetch README + examples
+   mcp_dart inspect --tool get_package_docs --json-args '{"package_name": "http"}'
+
+   # Search the internal lib/ source code
+   mcp_dart inspect --tool search_package_code \
+     --json-args '{"package_name": "http", "search_query": "Client"}'
+   ```
+
+This is particularly useful for verifying that JSON-RPC communication is working correctly without needing to restart your IDE or AI client.
 
 ## Adding to an MCP Client
-
-### Example for Claude Desktop
-Add this to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "dart_docs_mcp": {
-      "command": "dart-docs-mcp",
-      "args": []
-    }
-  }
-}
-```
 
 ### Example for Gemini CLI
 You can configure the MCP server in Gemini CLI either globally (`~/.gemini/settings.json`) or at the project level (`.gemini/settings.json`). Add the following inside your settings file:
@@ -111,6 +142,25 @@ Google Antigravity allows you to easily connect local MCP servers directly throu
 ```
 
 5. Save the configuration and click the **Refresh** button. The `get_package_docs` tool will now be natively available to your Antigravity AI agents to fetch Dart and Flutter package context on demand.
+
+### Example for Claude Code
+To use this with [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code), add it to your configuration:
+
+```bash
+claude mcp add dart_docs_mcp -- dart-docs-mcp
+```
+
+Or manually in your config file:
+```json
+{
+  "mcpServers": {
+    "dart_docs_mcp": {
+      "command": "dart-docs-mcp",
+      "args": []
+    }
+  }
+}
+```
 
 ## Testing
 
