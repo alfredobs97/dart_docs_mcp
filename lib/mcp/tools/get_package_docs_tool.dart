@@ -33,6 +33,12 @@ class GetPackageDocsTool extends BaseTool {
   );
 
   @override
+  ToolAnnotations get annotations => ToolAnnotations(
+        title: 'Get Package Documentation',
+        readOnlyHint: true,
+      );
+
+  @override
   Future<CallToolResult> execute(Map<String, dynamic> args, RequestHandlerExtra? extra) async {
     final packageName = args['package_name']?.toString();
     if (packageName == null || packageName.isEmpty) {

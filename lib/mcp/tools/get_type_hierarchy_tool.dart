@@ -42,8 +42,12 @@ class GetTypeHierarchyTool extends BaseTool {
   );
 
   @override
-  ToolAnnotations get annotations =>
-      ToolAnnotations(readOnlyHint: true, idempotentHint: true, openWorldHint: true);
+  ToolAnnotations get annotations => ToolAnnotations(
+        title: 'Get Type Hierarchy',
+        readOnlyHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
+      );
 
   @override
   Future<CallToolResult> execute(Map<String, dynamic> args, RequestHandlerExtra? extra) async {

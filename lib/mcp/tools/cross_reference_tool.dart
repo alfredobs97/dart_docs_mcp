@@ -29,6 +29,12 @@ class CrossReferenceTool extends BaseTool {
   );
 
   @override
+  ToolAnnotations get annotations => ToolAnnotations(
+        title: 'Cross-Reference Feature',
+        readOnlyHint: true,
+      );
+
+  @override
   Future<CallToolResult> execute(Map<String, dynamic> args, RequestHandlerExtra? extra) async {
     final packageName = args['package_name']?.toString();
     final feature = args['feature']?.toString();

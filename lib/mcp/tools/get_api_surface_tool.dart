@@ -48,7 +48,11 @@ class GetApiSurfaceTool extends BaseTool {
   );
 
   @override
-  ToolAnnotations get annotations => ToolAnnotations(readOnlyHint: true, idempotentHint: true);
+  ToolAnnotations get annotations => ToolAnnotations(
+        title: 'Get API Surface',
+        readOnlyHint: true,
+        idempotentHint: true,
+      );
 
   @override
   Future<CallToolResult> execute(Map<String, dynamic> args, RequestHandlerExtra? extra) async {

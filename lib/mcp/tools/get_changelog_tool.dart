@@ -40,6 +40,12 @@ class GetChangelogTool extends BaseTool {
   );
 
   @override
+  ToolAnnotations get annotations => ToolAnnotations(
+        title: 'Get Package Changelog',
+        readOnlyHint: true,
+      );
+
+  @override
   Future<CallToolResult> execute(Map<String, dynamic> args, RequestHandlerExtra? extra) async {
     try {
       final packageName = args['package_name']?.toString();

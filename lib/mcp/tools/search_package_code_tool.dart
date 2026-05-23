@@ -39,7 +39,10 @@ class SearchPackageCodeTool extends BaseTool {
       );
 
   @override
-  ToolAnnotations get annotations => ToolAnnotations(readOnlyHint: true);
+  ToolAnnotations get annotations => ToolAnnotations(
+        title: 'Search Package Code',
+        readOnlyHint: true,
+      );
 
   @override
   Future<CallToolResult> execute(
